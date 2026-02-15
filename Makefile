@@ -1,4 +1,4 @@
-.PHONY: verify fix lint format type-check install test docs docs-serve
+.PHONY: verify fix lint format type-check install test test-cov docs docs-serve
 
 # Verify - check everything without making changes
 verify: lint format-check type-check
@@ -28,6 +28,10 @@ install:
 # Run tests
 test:
 	uv run pytest tests/ -v
+
+# Run tests with coverage reports (terminal + XML + HTML)
+test-cov:
+	uv run pytest tests/ -v --cov=extensions --cov=tests --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov
 
 # Documentation
 docs:

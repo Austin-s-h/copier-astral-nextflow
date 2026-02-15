@@ -80,6 +80,16 @@ jobs:
       - name: Run tests with coverage
         run: make test-cov
 
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports-py{% raw %}${{ matrix.python-version }}{% endraw %}
+          path: |
+            coverage.xml
+            htmlcov/
+          if-no-files-found: error
+
 {%- if include_codecov %}
 
       - name: Upload coverage to Codecov

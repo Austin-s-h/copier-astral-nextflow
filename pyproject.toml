@@ -18,6 +18,7 @@ dev = [
     "pip-audit>=2.10.0",
     "pysentry-rs>=0.4.0",
     "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
     "pytest-xdist>=3.8.0",
     "ruff>=0.14.14",
     "ty>=0.0.14",
@@ -76,6 +77,14 @@ markers = [
   "ci: marks tests as continuous integration tests",
   "slow: marks tests as slow",
 ]
+
+[tool.coverage.run]
+source = ["extensions", "tests"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
 
 [tool.codespell]
 count = true
