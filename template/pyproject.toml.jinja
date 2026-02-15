@@ -44,6 +44,7 @@ dependencies = [
 dev = [
     "pytest>=9.0.0",
     "pytest-cov>=7.0.0",
+    "codespell>=2.4.0",
     "ruff>=0.14.14",
     "ty>=0.0.14",
     "hatch>=1.16.3",
@@ -68,6 +69,9 @@ Documentation = "https://{{ github_username }}.github.io/{{ repository_name }}"
 Repository = "https://github.com/{{ github_username }}/{{ repository_name }}"
 Issues = "https://github.com/{{ github_username }}/{{ repository_name }}/issues"
 Changelog = "https://github.com/{{ github_username }}/{{ repository_name }}/blob/main/CHANGELOG.md"
+
+[tool.uv]
+default-groups = ["dev"]
 
 {%- if include_cli %}
 
@@ -130,7 +134,22 @@ known-first-party = ["{{ project_slug }}"]
 # =============================================================================
 
 [tool.ty.src]
-include = ["**/*.py"]
+include = ["src", "tests"]
+exclude = ["generated", "**/*.proto"]
+
+[tool.ty.environment]
+python-version = "{{ python_version }}"
+
+[tool.ty.rules]
+all = "error"
+
+# Commonly desired behavior for scientific/bioinformatics stacks where optional
+# dependencies and native bindings may not be import-resolvable in all envs.
+unresolved-import = "ignore"
+possibly-missing-import = "ignore"
+
+# Keep ignore comments tidy without failing builds.
+unused-ignore-comment = "warn"
 
 # =============================================================================
 # Pytest
@@ -148,6 +167,15 @@ addopts = [
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
+
+# =============================================================================
+# Codespell
+# =============================================================================
+
+[tool.codespell]
+count = true
+quiet-level = 3
+skip = './tests/,.venv/,./docs/_build/,./build/,./dist/,**/*.fasta,**/*.fa,**/*.fastq,**/*.fq,**/*.vcf,**/*.gff,**/*.gff3,**/*.gtf,**/*.bed'
 
 # =============================================================================
 # Coverage

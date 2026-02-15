@@ -1,12 +1,13 @@
 [project]
 name = "copier-astral"
-version = "0.2.0"
-description = "A Copier template for Python projects using Astral's toolchain"
+version = "0.2.1"
+description = "A Copier template for Nextflow and Python projects using Astral's toolchain"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [
-    { name = "Ritwik Tiwari", email = "ritwiktiwari24@gmail.com" }
+    { name = "Ritwik Tiwari", email = "ritwiktiwari24@gmail.com" },
+    { name = "Austin Hovland", email = "austin@sansterbioanalytics.com" }
 ]
 dependencies = []
 
@@ -17,6 +18,7 @@ dev = [
     "pip-audit>=2.10.0",
     "pysentry-rs>=0.4.0",
     "pytest>=9.0.2",
+    "pytest-xdist>=3.8.0",
     "ruff>=0.14.14",
     "ty>=0.0.14",
 ]
@@ -34,10 +36,51 @@ packages = ["."]
 
 [tool.ruff]
 target-version = "py310"
-line-length = 88
+line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "UP"]
 
 [tool.ty.src]
-include = ["**/*.py"]
+include = ["extensions.py", "tests"]
+exclude = ["template/**"]
+
+[tool.ty.rules]
+all = "error"
+unresolved-import = "ignore"
+possibly-missing-import = "ignore"
+redundant-cast = "warn"
+unused-ignore-comment = "warn"
+
+[tool.ty.environment]
+python-version = "3.10"
+
+[tool.ty.analysis]
+allowed-unresolved-imports = ["**"]
+
+[tool.pytest.ini_options]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "-n",
+    "auto",
+    "--color=yes",
+]
+log_cli = true
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_level = "INFO"
+markers = [
+  "unit: marks tests as unit tests",
+  "ci: marks tests as continuous integration tests",
+  "slow: marks tests as slow",
+]
+
+[tool.codespell]
+count = true
+quiet-level = 3
+skip = './tests/,.venv/,./docs/_build/,./build/,./dist/,**/*.fasta,**/*.fa,**/*.fastq,**/*.fq,**/*.vcf,**/*.gff,**/*.gff3,**/*.gtf,**/*.bed'
+
+[tool.uv]
+default-groups = ["dev"]

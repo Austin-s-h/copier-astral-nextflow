@@ -242,9 +242,7 @@ class TestPythonVersions:
     """Tests for Python version configuration."""
 
     @pytest.mark.parametrize("version", ["3.10", "3.11", "3.12", "3.13"])
-    def test_python_version_in_pyproject(
-        self, tmp_path: Path, default_answers: dict, version: str
-    ):
+    def test_python_version_in_pyproject(self, tmp_path: Path, default_answers: dict, version: str):
         """Test that Python version is set in pyproject.toml."""
         answers = {**default_answers, "python_version": version}
         project = run_copier(tmp_path, answers)
@@ -256,9 +254,7 @@ class TestPythonVersions:
 class TestGitHubURLs:
     """Tests for GitHub URL generation."""
 
-    def test_github_username_in_pyproject_urls(
-        self, tmp_path: Path, default_answers: dict
-    ):
+    def test_github_username_in_pyproject_urls(self, tmp_path: Path, default_answers: dict):
         """Test that github_username appears in pyproject.toml URLs."""
         project = run_copier(tmp_path, default_answers)
         pyproject = project / "pyproject.toml"
@@ -287,13 +283,9 @@ class TestGitHubURLs:
         project = run_copier(tmp_path, default_answers)
         docs_index = project / "docs" / "index.md"
 
-        assert file_contains_text(
-            docs_index, "https://github.com/testuser/test-project"
-        )
+        assert file_contains_text(docs_index, "https://github.com/testuser/test-project")
 
-    def test_empty_github_username_does_not_crash(
-        self, tmp_path: Path, default_answers: dict
-    ):
+    def test_empty_github_username_does_not_crash(self, tmp_path: Path, default_answers: dict):
         """Test that an empty github_username doesn't crash copier.
 
         Regression test for: https://github.com/ritwiktiwari/copier-astral/issues/25
