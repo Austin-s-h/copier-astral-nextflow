@@ -35,6 +35,7 @@ test-cov:
 
 # Render the template, build Docker image, and run Nextflow smoke test locally
 integration-local:
+	set -eu; \
 	output_dir="$$(mktemp -d)"; \
 	echo "Rendering integration project to $$output_dir"; \
 	uv run copier copy . "$$output_dir" --vcs-ref HEAD --defaults --force --trust \
@@ -56,10 +57,13 @@ integration-local:
 		-d nextflow_default_profile="local" \
 		-d nextflow_config_style="single_nextflow_config"; \
 	docker build -t integration-project:local-ci "$$output_dir"; \
-	nextflow -version | grep -q "version 25.10.4"; \
+	nf_cmd="docker run --rm -u $$(id -u):$$(id -g) -v $$output_dir:/workspace -w /workspace --entrypoint nextflow integration-project:local-ci"; \
+	nf_run_extra=""; \
+	echo "Using nextflow from integration-project:local-ci image"; \
+	eval "$$nf_cmd -version" | grep -q "version 25.10.4"; \
 	cd "$$output_dir"; \
-	nextflow config -profile local; \
-	nextflow run main.nf -profile test,local -with-docker integration-project:local-ci --input "data/test/*.fa" --outdir results-ci; \
+	eval "$$nf_cmd config -profile local"; \
+	eval "$$nf_cmd run main.nf -profile test,local $$nf_run_extra --input 'data/test/*.fa' --outdir results-ci"; \
 	test -f trace.txt; \
 	test -f report.html; \
 	test -f timeline.html; \

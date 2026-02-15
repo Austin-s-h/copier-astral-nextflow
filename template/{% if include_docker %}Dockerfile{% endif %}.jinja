@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
+ARG WAVE_CONDA_BASE_IMAGE=mambaorg/micromamba:2.3.3
 
 # Stage 1: Build
-FROM python:{{ python_version }}-slim as builder
+FROM python:{{ python_version }}-slim AS builder
 
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
@@ -13,7 +14,11 @@ COPY pyproject.toml uv.lock* ./
 
 # Install dependencies (without dev dependencies)
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-install-project
+        if [ -f uv.lock ]; then \
+            uv sync --frozen --no-dev --no-install-project; \
+        else \
+            uv sync --no-dev --no-install-project; \
+        fi
 
 # Copy source code
 COPY src/ src/
@@ -21,21 +26,38 @@ COPY README.md ./
 
 # Install the project
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+    if [ -f uv.lock ]; then \
+      uv sync --frozen --no-dev; \
+    else \
+      uv sync --no-dev; \
+    fi
+
+{%- if include_nextflow and container_strategy == 'full_pipeline_image' %}
+
+# Stage 2: Conda tools (Wave-ready base)
+FROM ${WAVE_CONDA_BASE_IMAGE} AS conda_tools
+
+USER root
+WORKDIR /opt/env
+
+# Install bioinformatics and Nextflow runtime tools with Conda/Mamba.
+COPY docker/environment-nextflow.yml ./environment-nextflow.yml
+RUN micromamba install -y -n base -f /opt/env/environment-nextflow.yml && \
+    micromamba clean --all --yes
+{%- endif %}
 
 
 # Stage 2: Runtime
-FROM python:{{ python_version }}-slim as runtime
+FROM python:{{ python_version }}-slim AS runtime
 
 {%- if include_nextflow and container_strategy == 'full_pipeline_image' %}
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends bash curl openjdk-17-jre-headless && \
+    apt-get install -y --no-install-recommends bash procps && \
     rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL https://get.nextflow.io | bash && \
-    mv nextflow /usr/local/bin/nextflow && \
-    chmod +x /usr/local/bin/nextflow
+# Bring Conda/Mamba-provisioned tooling from the wave-compatible base stage.
+COPY --from=conda_tools /opt/conda /opt/conda
 {%- endif %}
 
 # Create non-root user for security
@@ -46,9 +68,13 @@ WORKDIR /app
 
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
+COPY src/ src/
 
 # Set environment variables
 ENV PATH="/app/.venv/bin:$PATH"
+{%- if include_nextflow and container_strategy == 'full_pipeline_image' %}
+ENV PATH="/opt/conda/bin:${PATH}"
+{%- endif %}
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 {%- if include_nextflow %}
