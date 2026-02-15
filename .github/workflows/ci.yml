@@ -2,9 +2,14 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [dev, main]
   pull_request:
-    branches: [main]
+    branches: [dev, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
@@ -22,6 +27,60 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: make install
       - run: make test
+
+  nextflow-template-integration:
+    name: Nextflow Template Integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v2
+        with:
+          version: latest
+
+      - name: Install template dependencies
+        run: make install
+
+      - name: Render hybrid Nextflow project
+        run: |
+          set -euo pipefail
+          output_dir="$(mktemp -d)"
+          uv run copier copy . "$output_dir" --defaults --force --trust \
+            -d project_name="Integration Project" \
+            -d project_description="Integration smoke test" \
+            -d project_slug="integration_project" \
+            -d author_name="CI" \
+            -d author_email="ci@example.com" \
+            -d github_username="testuser" \
+            -d repository_name="integration-project" \
+            -d project_type="hybrid_python_nextflow" \
+            -d include_nextflow=true \
+            -d include_docker=false \
+            -d include_docs=false \
+            -d include_github_actions=false \
+            -d include_prek=false \
+            -d include_bio_defaults=true \
+            -d nextflow_default_profile="local" \
+            -d nextflow_config_style="single_nextflow_config"
+          echo "OUTPUT_DIR=$output_dir" >> "$GITHUB_ENV"
+
+      - name: Run Nextflow smoke test
+        run: |
+          set -euo pipefail
+          cd "$OUTPUT_DIR"
+          nextflow config -profile local
+          nextflow run main.nf -profile test,local --input "data/test/*.fa" --outdir results-ci
+          test -f trace.txt
+          test -f report.html
+          test -f timeline.html
 
   secrets_and_dependency_scan:
     name: Secret and Dependency Scan
