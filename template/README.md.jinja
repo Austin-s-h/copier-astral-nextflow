@@ -82,8 +82,13 @@ nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/
 ```
 
 - Generated config targets Nextflow 25 and includes `apptainer` profile support.
-- To extend for AWS Batch, add an `awsbatch` profile in `nextflow.config` and set `process.executor = 'awsbatch'`.
-- For AWS Batch mode with private images, point `process.container` to your account's private ECR URI.
+{%- if include_aws_batch %}
+- AWS Batch profile scaffolding is generated (`-profile awsbatch`) with queue/region/workDir defaults.
+- Private ECR is wired by default through `process.container` using `{{ ecr_registry }}/{{ ecr_repository }}:{{ ecr_image_tag }}`.
+- Configure `AWS_ROLE_TO_ASSUME` in GitHub Actions to enable OIDC-based ECR publishing.
+{%- else %}
+- Enable `include_aws_batch` to generate an `awsbatch` profile and private ECR defaults.
+{%- endif %}
 {%- endif %}
 
 ## Development

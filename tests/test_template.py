@@ -31,12 +31,20 @@ def default_answers() -> dict:
         "container_strategy": "full_pipeline_image",
         "nextflow_config_style": "single_nextflow_config",
         "nextflow_default_profile": "local",
+        "include_aws_batch": False,
+        "aws_region": "us-east-1",
+        "aws_batch_job_queue": "nextflow-batch-queue",
+        "aws_batch_work_dir": "s3://my-nextflow-bucket/work",
+        "ecr_registry": "123456789012.dkr.ecr.us-east-1.amazonaws.com",
+        "ecr_repository": "test-project",
+        "ecr_image_tag": "latest",
         "include_bio_defaults": True,
         "include_docs": True,
         "include_prek": True,
         "include_codecov": True,
         "include_pypi_publish": True,
         "include_ghcr_release": True,
+        "include_ecr_release": False,
         "license": "MIT",
     }
 
@@ -251,6 +259,36 @@ class TestOptionalFeatures:
         project_without = run_copier(tmp_path / "without-ghcr", answers)
         release_without = project_without / ".github" / "workflows" / "release.yml"
         assert not file_contains_text(release_without, "publish-ghcr")
+
+    def test_awsbatch_profile_generated(self, tmp_path: Path, default_answers: dict):
+        """Test AWS Batch profile is generated when enabled."""
+        answers = {
+            **default_answers,
+            "include_aws_batch": True,
+            "nextflow_default_profile": "awsbatch",
+        }
+        project = run_copier(tmp_path, answers)
+        nextflow_config = project / "nextflow.config"
+        assert file_contains_text(nextflow_config, "awsbatch {")
+        assert file_contains_text(nextflow_config, "process.executor = 'awsbatch'")
+        assert file_contains_text(nextflow_config, "process.container = params.ecr_container")
+
+    def test_ecr_release_toggle(self, tmp_path: Path, default_answers: dict):
+        """Test ECR release workflow behavior follows toggle."""
+        answers = {
+            **default_answers,
+            "include_aws_batch": True,
+            "include_ecr_release": True,
+        }
+        project = run_copier(tmp_path, answers)
+        release = project / ".github" / "workflows" / "release.yml"
+        assert file_contains_text(release, "publish-ecr")
+        assert file_contains_text(release, "aws-actions/amazon-ecr-login")
+
+        answers_without = {**answers, "include_ecr_release": False}
+        project_without = run_copier(tmp_path / "without-ecr", answers_without)
+        release_without = project_without / ".github" / "workflows" / "release.yml"
+        assert not file_contains_text(release_without, "publish-ecr")
 
 
 class TestLicenses:

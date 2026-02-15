@@ -53,8 +53,12 @@ nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/
 ```
 
 - The generated scaffold targets Nextflow 25 and supports `apptainer` profile usage.
-- Extend `nextflow.config` with an `awsbatch` profile for AWS Batch execution.
-- For private container images in AWS Batch, use a private ECR image URI in `process.container`.
+{%- if include_aws_batch %}
+- `awsbatch` profile is generated with AWS region, Batch queue, S3 work directory, and private ECR container defaults.
+- Use `nextflow run main.nf -profile awsbatch` to execute on AWS Batch.
+{%- else %}
+- Enable `include_aws_batch` to generate a concrete AWS Batch profile and private ECR defaults.
+{%- endif %}
 {%- endif %}
 
 ## Development

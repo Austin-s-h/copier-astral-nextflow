@@ -1,4 +1,4 @@
-{%- if include_pypi_publish or include_ghcr_release %}
+{%- if include_pypi_publish or include_ghcr_release or include_ecr_release %}
 name: Release
 
 on:
@@ -102,16 +102,47 @@ jobs:
           labels: {% raw %}${{ steps.meta.outputs.labels }}{% endraw %}
 {%- endif %}
 
+{%- if include_ecr_release %}
+
+  publish-ecr:
+    name: Build and publish private ECR image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: {{ aws_region }}
+          role-to-assume: {% raw %}${{ secrets.AWS_ROLE_TO_ASSUME }}{% endraw %}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image to ECR
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: {{ ecr_registry }}/{{ ecr_repository }}:{{ ecr_image_tag }}
+{%- endif %}
+
   github-release:
     name: Create GitHub Release
     needs:
-{%- if include_pypi_publish and include_ghcr_release %}
+{%- if include_pypi_publish %}
       - publish-pypi
+{%- endif %}
+{%- if include_ghcr_release %}
       - publish-ghcr
-{%- elif include_pypi_publish %}
-      - publish-pypi
-{%- elif include_ghcr_release %}
-      - publish-ghcr
+{%- endif %}
+{%- if include_ecr_release %}
+      - publish-ecr
 {%- endif %}
     runs-on: ubuntu-latest
     steps:

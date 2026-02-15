@@ -152,8 +152,51 @@ nextflow_default_profile:
     - docker
     - conda
     - apptainer
+    - awsbatch
   default: local
   when: "{{ include_nextflow }}"
+
+include_aws_batch:
+  type: bool
+  help: "Include AWS Batch execution profile scaffolding?"
+  default: false
+  when: "{{ include_nextflow }}"
+
+aws_region:
+  type: str
+  help: "AWS region for Batch/ECR"
+  default: us-east-1
+  when: "{{ include_aws_batch }}"
+
+aws_batch_job_queue:
+  type: str
+  help: "AWS Batch job queue name"
+  default: nextflow-batch-queue
+  when: "{{ include_aws_batch }}"
+
+aws_batch_work_dir:
+  type: str
+  help: "S3 work directory for Nextflow AWS Batch runs"
+  default: s3://my-nextflow-bucket/work
+  when: "{{ include_aws_batch }}"
+
+ecr_registry:
+  type: str
+  help: "Private ECR registry URI (<account>.dkr.ecr.<region>.amazonaws.com)"
+  default: 123456789012.dkr.ecr.us-east-1.amazonaws.com
+  when: "{{ include_aws_batch }}"
+
+ecr_repository:
+  type: str
+  help: "Private ECR repository name"
+  default: "{{ repository_name }}"
+  when: "{{ include_aws_batch }}"
+
+ecr_image_tag:
+  type: str
+  help: "Default private ECR image tag"
+  default: latest
+  when: "{{ include_aws_batch }}"
 
 include_bio_defaults:
   type: bool
@@ -194,6 +237,12 @@ include_ghcr_release:
   help: "Include GHCR image build/publish in release workflow?"
   default: "{{ include_docker and include_nextflow }}"
   when: "{{ include_github_actions and include_docker }}"
+
+include_ecr_release:
+  type: bool
+  help: "Include private ECR image build/publish in release workflow?"
+  default: "{{ include_docker and include_aws_batch }}"
+  when: "{{ include_github_actions and include_docker and include_aws_batch }}"
 
 # =============================================================================
 # License

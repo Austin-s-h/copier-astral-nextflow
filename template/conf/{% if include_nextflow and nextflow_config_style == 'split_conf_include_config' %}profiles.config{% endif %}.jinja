@@ -20,13 +20,18 @@ profiles {
     process.executor = 'local'
   }
 
-  // Extension note: add an AWS Batch profile when moving to cloud execution.
-  // awsbatch {
-  //   process.executor = 'awsbatch'
-  //   aws.region = 'us-east-1'
-  //   docker.enabled = true
-  //   // For private ECR images, use an ECR URI in process.container.
-  // }
+{%- if include_aws_batch %}
+  awsbatch {
+    process.executor = 'awsbatch'
+    process.queue = '{{ aws_batch_job_queue }}'
+    process.container = '{{ ecr_registry }}/{{ ecr_repository }}:{{ ecr_image_tag }}'
+    docker.enabled = true
+    apptainer.enabled = false
+    conda.enabled = false
+    workDir = '{{ aws_batch_work_dir }}'
+    aws.region = '{{ aws_region }}'
+  }
+{%- endif %}
 
   smoke {
     params.input = 'data/smoke/*.fa'
