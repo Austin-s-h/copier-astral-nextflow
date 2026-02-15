@@ -42,9 +42,10 @@ test-matrix-cov:
 	uv run hatch test --cover
 
 {% if include_nextflow %}
-# Validate Nextflow config and pipeline graph
+# Validate Nextflow config and lint pipeline
 nextflow-validate:
 	nextflow config -profile {{ nextflow_default_profile }}
+	nextflow lint main.nf -profile {{ nextflow_default_profile }}
 
 # Fast smoke run using the built-in test profile
 nextflow-smoke:

@@ -30,6 +30,23 @@ Auto-fix lint and format issues:
 make fix
 ```
 
+## Local Integration Test (Docker + Nextflow)
+
+Run an end-to-end local integration test that:
+
+1. Renders a project from the template
+2. Builds the generated Docker image
+3. Runs the Nextflow smoke workflow with Docker
+
+```bash
+make integration-local
+```
+
+Prerequisites:
+
+- Docker daemon is running
+- `nextflow` is installed locally at version `25.10.4`
+
 ## Building the Documentation
 
 ```bash

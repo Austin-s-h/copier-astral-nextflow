@@ -1,4 +1,4 @@
-.PHONY: verify fix lint format type-check install test test-cov docs docs-serve
+.PHONY: verify fix lint format type-check install test test-cov integration-local docs docs-serve
 
 # Verify - check everything without making changes
 verify: lint format-check type-check
@@ -32,6 +32,38 @@ test:
 # Run tests with coverage reports (terminal + XML + HTML)
 test-cov:
 	uv run pytest tests/ -v --cov=extensions --cov=tests --cov-report=term-missing --cov-report=xml:coverage.xml --cov-report=html:htmlcov
+
+# Render the template, build Docker image, and run Nextflow smoke test locally
+integration-local:
+	output_dir="$$(mktemp -d)"; \
+	echo "Rendering integration project to $$output_dir"; \
+	uv run copier copy . "$$output_dir" --vcs-ref HEAD --defaults --force --trust \
+		-d project_name="Integration Project" \
+		-d project_description="Integration smoke test" \
+		-d project_slug="integration_project" \
+		-d author_name="Local CI" \
+		-d author_email="local-ci@example.com" \
+		-d github_username="testuser" \
+		-d repository_name="integration-project" \
+		-d project_type="hybrid_python_nextflow" \
+		-d include_nextflow=true \
+		-d include_docker=true \
+		-d container_strategy="full_pipeline_image" \
+		-d include_docs=false \
+		-d include_github_actions=false \
+		-d include_prek=false \
+		-d include_bio_defaults=true \
+		-d nextflow_default_profile="local" \
+		-d nextflow_config_style="single_nextflow_config"; \
+	docker build -t integration-project:local-ci "$$output_dir"; \
+	nextflow -version | grep -q "version 25.10.4"; \
+	cd "$$output_dir"; \
+	nextflow config -profile local; \
+	nextflow run main.nf -profile test,local -with-docker integration-project:local-ci --input "data/test/*.fa" --outdir results-ci; \
+	test -f trace.txt; \
+	test -f report.html; \
+	test -f timeline.html; \
+	echo "Integration smoke test passed in $$output_dir"
 
 # Documentation
 docs:

@@ -239,6 +239,11 @@ class TestOptionalFeatures:
         assert not file_exists(project, "main.nf")
         assert not file_exists(project, "nextflow.config")
 
+    def test_nextflow_validate_includes_lint(self, tmp_path: Path, default_answers: dict):
+        """Test Makefile nextflow-validate target includes lint."""
+        project = run_copier(tmp_path, default_answers)
+        assert file_contains_text(project / "Makefile", "nextflow lint main.nf -profile local")
+
     def test_split_nextflow_config_layout(self, tmp_path: Path, default_answers: dict):
         """Test split Nextflow config files are generated when selected."""
         answers = {**default_answers, "nextflow_config_style": "split_conf_include_config"}

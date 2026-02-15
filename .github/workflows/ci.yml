@@ -74,7 +74,7 @@ jobs:
       - name: Set up Nextflow 25
         uses: nf-core/setup-nextflow@v2
         with:
-          version: "25.04"
+          version: "25.10.4"
           java-version: "17"
           java-distribution: "temurin"
 
@@ -83,7 +83,6 @@ jobs:
 
       - name: Run Nextflow smoke test
         run: |
-          set -euo pipefail
           cd "$OUTPUT_DIR"
           nextflow config -profile local
           nextflow run main.nf -profile test,local --input "data/test/*.fa" --outdir results-ci

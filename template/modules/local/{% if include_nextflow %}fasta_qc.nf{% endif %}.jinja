@@ -10,6 +10,6 @@ process FASTA_QC {
   script:
   """
   echo "name=${fasta.baseName}" > ${fasta.baseName}.qc.txt
-  echo "bytes=$(wc -c < ${fasta})" >> ${fasta.baseName}.qc.txt
+  echo "bytes=\$(wc -c < ${fasta})" >> ${fasta.baseName}.qc.txt
   """
 }
