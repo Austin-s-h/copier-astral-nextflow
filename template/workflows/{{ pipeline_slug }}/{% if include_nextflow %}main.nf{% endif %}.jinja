@@ -5,7 +5,7 @@ workflow PIPELINE_MAIN {
   input_pattern
 
   main:
-  samples = Channel
+  samples = channel
     .fromPath(input_pattern, checkIfExists: true)
     .splitCsv(header: true)
     .map { row ->
@@ -15,10 +15,10 @@ workflow PIPELINE_MAIN {
   FASTQC(samples)
 
   fastqc_archives = FASTQC.out.zip
-    .map { meta, archive -> archive }
+    .map { _meta, archive -> archive }
     .collect()
 
-  multiqc_config = Channel.value(file("$projectDir/assets/multiqc_config.yml", checkIfExists: true))
+  multiqc_config = channel.value(file("$projectDir/assets/multiqc_config.yml", checkIfExists: true))
   MULTIQC(fastqc_archives, multiqc_config)
 
   emit:

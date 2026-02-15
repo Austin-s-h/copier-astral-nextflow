@@ -63,6 +63,7 @@ integration-local:
 	eval "$$nf_cmd -version" | grep -q "version 25.10.4"; \
 	cd "$$output_dir"; \
 	eval "$$nf_cmd config -profile local"; \
+	eval "NXF_SYNTAX_PARSER=v2 $$nf_cmd lint ."; \
 	eval "$$nf_cmd run main.nf -profile test,local $$nf_run_extra --input 'data/test/*.csv' --outdir results-ci"; \
 	ls results-ci/pipeline_info/trace_*.txt >/dev/null; \
 	ls results-ci/pipeline_info/report_*.html >/dev/null; \
