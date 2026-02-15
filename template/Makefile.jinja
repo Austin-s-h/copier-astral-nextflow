@@ -1,4 +1,4 @@
-.PHONY: verify fix lint format format-check type-check install test test-cov test-matrix test-matrix-cov{% if include_nextflow %} nextflow-validate nextflow-smoke{% endif %}{% if include_security_scanning %} pysentry{% endif %}{% if include_docs %} docs docs-serve{% endif %}
+.PHONY: verify fix lint format format-check type-check install test test-cov test-matrix test-matrix-cov{% if include_nextflow %} nextflow-prereqs nextflow-validate nextflow-smoke{% endif %}{% if include_security_scanning %} pysentry{% endif %}{% if include_docs %} docs docs-serve{% endif %}
 
 # Verify - check everything without making changes
 verify: lint format-check type-check{% if include_nextflow %} nextflow-validate{% endif %}
@@ -42,14 +42,18 @@ test-matrix-cov:
 	uv run hatch test --cover
 
 {% if include_nextflow %}
+nextflow-prereqs:
+	@command -v java >/dev/null 2>&1 || (echo "Java runtime is required for Nextflow (OpenJDK 17+)." >&2; exit 1)
+	@command -v nextflow >/dev/null 2>&1 || (echo "Nextflow CLI is required. Install from https://www.nextflow.io/docs/latest/getstarted.html" >&2; exit 1)
+
 # Validate Nextflow config and lint pipeline
-nextflow-validate:
+nextflow-validate: nextflow-prereqs
 	nextflow config -profile {{ nextflow_default_profile }}
 	NXF_SYNTAX_PARSER=v2 nextflow lint .
 
 # Fast smoke run using the built-in test profile
-nextflow-smoke:
-	nextflow run . -profile test,{{ nextflow_default_profile }} --input "data/test/*.csv" --outdir results-smoke
+nextflow-smoke: nextflow-prereqs
+	nextflow run . -profile test,{{ nextflow_default_profile }} --input "data/test/samplesheet.csv" --outdir results-smoke
 {% endif %}
 
 {% if include_security_scanning %}

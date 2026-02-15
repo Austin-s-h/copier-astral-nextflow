@@ -45,11 +45,14 @@ print({{ project_slug }}.__version__)
 The generated project includes a Nextflow DSL2 scaffold with local modules and profile-based execution.
 
 ```bash
+# Check local Nextflow/Java prerequisites
+make nextflow-prereqs
+
 # Validate selected profile
 nextflow config -profile {{ nextflow_default_profile }}
 
 # Run smoke test profile
-nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/test/*.csv" --outdir results-test
+nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/test/samplesheet.csv" --outdir results-test
 ```
 
 - The generated scaffold targets Nextflow 25 and supports `apptainer` profile usage.
@@ -67,6 +70,9 @@ nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/
 
 - Python {{ python_version }}+
 - [uv](https://docs.astral.sh/uv/) for package management
+{%- if include_nextflow %}
+- Java 17+ runtime and Nextflow CLI for pipeline validation/execution
+{%- endif %}
 
 ### Setup
 

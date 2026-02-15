@@ -120,6 +120,9 @@ jobs:
       - name: Verify Nextflow installation
         run: nextflow -version
 
+      - name: Preflight Nextflow config
+        run: nextflow config -profile {{ nextflow_default_profile }}
+
       - name: Lint Nextflow
         run: nextflow lint .
 
@@ -130,7 +133,7 @@ jobs:
         run: uv tool run nf-core pipelines schema lint
 
       - name: Run smoke workflow
-        run: nextflow run . -profile test,docker --input "data/test/*.csv" --outdir results-ci
+        run: nextflow run . -profile test,docker --input "data/test/samplesheet.csv" --outdir results-ci
 {%- endif %}
 
 {%- if include_security_scanning %}

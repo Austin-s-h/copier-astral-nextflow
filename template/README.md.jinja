@@ -74,11 +74,14 @@ print({{ project_slug }}.__version__)
 ## Nextflow Usage
 
 ```bash
+# Check local Nextflow/Java prerequisites
+make nextflow-prereqs
+
 # Validate config
 nextflow config -profile {{ nextflow_default_profile }}
 
 # Fast smoke run
-nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/test/*.csv" --outdir results-test
+nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/test/samplesheet.csv" --outdir results-test
 ```
 
 - Generated config targets Nextflow 25 and includes `apptainer` profile support.
@@ -97,6 +100,9 @@ nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/
 
 - Python {{ python_version }}+
 - [uv](https://docs.astral.sh/uv/) for package management
+{%- if include_nextflow %}
+- Java 17+ runtime and Nextflow CLI for pipeline validation/execution
+{%- endif %}
 
 ### Setup
 

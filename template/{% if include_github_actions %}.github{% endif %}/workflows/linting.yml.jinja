@@ -17,5 +17,7 @@ jobs:
           version: '{{ min_nextflow_version }}'
           java-version: '17'
           java-distribution: 'temurin'
+      - name: Preflight Nextflow config
+        run: nextflow config -profile {{ nextflow_default_profile }}
       - name: Lint Nextflow
         run: nextflow lint .
