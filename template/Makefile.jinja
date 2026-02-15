@@ -45,11 +45,11 @@ test-matrix-cov:
 # Validate Nextflow config and lint pipeline
 nextflow-validate:
 	nextflow config -profile {{ nextflow_default_profile }}
-	nextflow lint main.nf -profile {{ nextflow_default_profile }}
+	NXF_SYNTAX_PARSER=v2 nextflow lint .
 
 # Fast smoke run using the built-in test profile
 nextflow-smoke:
-	nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/*.fa" --outdir results-smoke
+	nextflow run . -profile test,{{ nextflow_default_profile }} --input "data/test/*.csv" --outdir results-smoke
 {% endif %}
 
 {% if include_security_scanning %}

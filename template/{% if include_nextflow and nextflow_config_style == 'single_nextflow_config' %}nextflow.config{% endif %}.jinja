@@ -1,117 +1,101 @@
-manifest {
-  name = '{{ github_username }}/{{ repository_name }}'
-  description = '{{ project_description }}'
-  version = '0.1.0'
-  nextflowVersion = '!>=25.00.0'
-}
+/*
+ * {{ pipeline_name }} Nextflow config
+ */
 
 params {
-  input = 'data/*.fa'
-  outdir = 'results'
-{%- if include_aws_batch %}
-  ecr_container = '{{ ecr_registry }}/{{ ecr_repository }}:{{ ecr_image_tag }}'
-{%- endif %}
+  input                      = null
+  outdir                     = 'results'
+  publish_dir_mode           = 'copy'
+  email                      = null
+  email_on_fail              = null
+  plaintext_email            = false
+  monochrome_logs            = false
+  hook_url                   = null
+  help                       = false
+  help_full                  = false
+  show_hidden                = false
+  version                    = false
+  config_profile_name        = null
+  config_profile_description = null
+  custom_config_version      = 'master'
+  custom_config_base         = "https://raw.githubusercontent.com/nf-core/configs/${params.custom_config_version}"
+  config_profile_contact     = null
+  config_profile_url         = null
+  validate_params            = true
 }
 
 process {
-  cpus = 2
-  memory = '4 GB'
-  time = '2h'
-
-  withLabel: low {
-    cpus = 1
-    memory = '2 GB'
-    time = '1h'
-  }
-
-  withLabel: medium {
-    cpus = 4
-    memory = '8 GB'
-    time = '4h'
-  }
-
-  withLabel: high {
-    cpus = 8
-    memory = '16 GB'
-    time = '8h'
-  }
-
-  errorStrategy = 'retry'
-  maxRetries = 2
-  maxErrors = '-1'
+  publishDir = [
+    path: { "${params.outdir}/${task.process.tokenize(':')[-1].tokenize('_').toLowerCase()}" },
+    mode: params.publish_dir_mode,
+    saveAs: { filename -> filename.equals('versions.yml') ? null : filename }
+  ]
 }
+
+includeConfig 'conf/base.config'
 
 profiles {
-  local {
-    process.executor = 'local'
-  }
-
-  docker {
-    process.executor = 'local'
-    docker.enabled = true
-    apptainer.enabled = false
-    conda.enabled = false
-  }
-
-  conda {
-    conda.enabled = true
-    process.executor = 'local'
-  }
-
-  apptainer {
-    apptainer.enabled = true
-    process.executor = 'local'
-  }
-
-{%- if include_aws_batch %}
-  awsbatch {
-    process.executor = 'awsbatch'
-    process.queue = '{{ aws_batch_job_queue }}'
-    process.container = params.ecr_container
-    docker.enabled = true
-    apptainer.enabled = false
-    conda.enabled = false
-    workDir = '{{ aws_batch_work_dir }}'
-    aws.region = '{{ aws_region }}'
-  }
+  local       { process.executor = 'local' }
+  conda       { conda.enabled = true; docker.enabled = false }
+  mamba       { conda.enabled = true; conda.useMamba = true; docker.enabled = false }
+  docker      { docker.enabled = true; docker.runOptions = '-u $(id -u):$(id -g)' }
+  singularity { singularity.enabled = true; singularity.autoMounts = true }
+  podman      { podman.enabled = true }
+  apptainer   { apptainer.enabled = true; apptainer.autoMounts = true }
+{%- if use_wave %}
+  wave        { wave.enabled = true; wave.freeze = true; wave.strategy = 'conda,container' }
 {%- endif %}
+  arm         { docker.runOptions = '-u $(id -u):$(id -g) --platform=linux/amd64' }
+  test        { includeConfig 'conf/test.config' }
+  test_full   { includeConfig 'conf/test_full.config' }
+}
 
-  test {
-    params.input = 'data/test/*.fa'
-    params.outdir = 'results-test'
-    process {
-      cpus = 1
-      memory = '1 GB'
-      time = '30m'
-    }
+includeConfig !System.getenv('NXF_OFFLINE') && params.custom_config_base ?
+  "${params.custom_config_base}/nfcore_custom.config" : "/dev/null"
+
+apptainer.registry   = '{{ container_registry }}'
+docker.registry      = '{{ container_registry }}'
+podman.registry      = '{{ container_registry }}'
+singularity.registry = '{{ container_registry }}'
+
+env {
+  PYTHONNOUSERSITE = 1
+  R_PROFILE_USER = "/.Rprofile"
+  R_ENVIRON_USER = "/.Renviron"
+}
+process.shell = """\
+bash
+set -euo pipefail
+"""
+
+nextflow.enable.strict = true
+
+def trace_timestamp = new java.util.Date().format('yyyy-MM-dd_HH-mm-ss')
+timeline { enabled = true; file = "${params.outdir}/pipeline_info/timeline_${trace_timestamp}.html" }
+report   { enabled = true; file = "${params.outdir}/pipeline_info/report_${trace_timestamp}.html" }
+trace    { enabled = true; file = "${params.outdir}/pipeline_info/trace_${trace_timestamp}.txt" }
+dag      { enabled = true; file = "${params.outdir}/pipeline_info/dag_${trace_timestamp}.html" }
+
+manifest {
+  name            = '{{ pipeline_name }}'
+  author          = '{{ author }}'
+  homePage        = '{{ repo_url }}'
+  description     = '{{ description }}'
+  mainScript      = 'main.nf'
+  nextflowVersion = '!>={{ min_nextflow_version }}'
+  version         = '{{ version }}'
+}
+
+plugins { id 'nf-schema@2.1.1' }
+
+validation {
+  defaultIgnoreParams = ["genomes"]
+  help {
+    enabled             = true
+    command             = "nextflow run $manifest.name -profile <docker/singularity> --input samplesheet.csv --outdir <OUTDIR>"
+    fullParameter       = "help_full"
+    showHiddenParameter = "show_hidden"
   }
-
-  smoke {
-    params.input = 'data/smoke/*.fa'
-    params.outdir = 'results-smoke'
-  }
-
-  debug {
-    process.echo = true
-  }
 }
 
-timeline {
-  enabled = true
-  file = 'timeline.html'
-}
-
-report {
-  enabled = true
-  file = 'report.html'
-}
-
-trace {
-  enabled = true
-  file = 'trace.txt'
-}
-
-dag {
-  enabled = true
-  file = 'dag.html'
-}
+includeConfig 'conf/modules.config'

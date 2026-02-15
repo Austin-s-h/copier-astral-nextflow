@@ -1,0 +1,13 @@
+include { FASTA_QC } from '../../modules/local/fasta_qc'
+
+workflow PIPELINE_MAIN {
+  take:
+  input_pattern
+
+  main:
+  reads = Channel.fromPath(input_pattern, checkIfExists: true)
+  FASTA_QC(reads)
+
+  emit:
+  FASTA_QC.out
+}

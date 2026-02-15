@@ -105,6 +105,8 @@ jobs:
   nextflow-smoke:
     name: Nextflow Smoke
     runs-on: ubuntu-latest
+    env:
+      NXF_SYNTAX_PARSER: v2
     steps:
       - uses: actions/checkout@v4
 
@@ -118,11 +120,17 @@ jobs:
       - name: Verify Nextflow installation
         run: nextflow -version
 
-      - name: Validate config and lint
-        run: make nextflow-validate
+      - name: Lint Nextflow
+        run: nextflow lint .
+
+      - name: Lint Python
+        run: uv tool run pyright bin/ && uv tool run mypy bin/
+
+      - name: Schema lint
+        run: uv tool run nf-core pipelines schema lint
 
       - name: Run smoke workflow
-        run: nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/test/*.fa" --outdir results-ci
+        run: nextflow run . -profile test,docker --input "data/test/*.csv" --outdir results-ci
 {%- endif %}
 
 {%- if include_security_scanning %}

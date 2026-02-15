@@ -82,13 +82,15 @@ jobs:
         run: nextflow -version
 
       - name: Run Nextflow smoke test
+        env:
+          NXF_SYNTAX_PARSER: v2
         run: |
           cd "$OUTPUT_DIR"
           nextflow config -profile local
-          nextflow run main.nf -profile test,local --input "data/test/*.fa" --outdir results-ci
-          test -f trace.txt
-          test -f report.html
-          test -f timeline.html
+          nextflow run . -profile test,local --input "data/test/samplesheet.csv" --outdir results-ci
+          compgen -G "results-ci/pipeline_info/trace_*.txt" > /dev/null
+          compgen -G "results-ci/pipeline_info/report_*.html" > /dev/null
+          compgen -G "results-ci/pipeline_info/timeline_*.html" > /dev/null
 
   secrets_and_dependency_scan:
     name: Secret and Dependency Scan
