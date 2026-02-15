@@ -49,7 +49,7 @@ The generated project includes a Nextflow DSL2 scaffold with local modules and p
 nextflow config -profile {{ nextflow_default_profile }}
 
 # Run smoke test profile
-nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/test/*.fa" --outdir results-test
+nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/test/*.csv" --outdir results-test
 ```
 
 - The generated scaffold targets Nextflow 25 and supports `apptainer` profile usage.

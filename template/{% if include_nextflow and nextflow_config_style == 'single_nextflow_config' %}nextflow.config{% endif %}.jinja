@@ -64,8 +64,7 @@ env {
   R_ENVIRON_USER = "/.Renviron"
 }
 process.shell = """\
-bash
-set -euo pipefail
+bash -euo pipefail
 """
 
 nextflow.enable.strict = true

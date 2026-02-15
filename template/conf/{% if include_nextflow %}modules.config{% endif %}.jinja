@@ -10,7 +10,7 @@ process {
     publishDir = [
       path: { "${params.outdir}/fastqc/${meta.id}" },
       mode: params.publish_dir_mode,
-      pattern: "*.{html,json}"
+      pattern: "*_fastqc.{html,zip}"
     ]
   }
 

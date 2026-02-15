@@ -1,13 +1,27 @@
-include { FASTA_QC } from '../../modules/local/fasta_qc'
+include { FASTQC; MULTIQC } from '../../modules/local/fasta_qc'
 
 workflow PIPELINE_MAIN {
   take:
   input_pattern
 
   main:
-  reads = Channel.fromPath(input_pattern, checkIfExists: true)
-  FASTA_QC(reads)
+  samples = Channel
+    .fromPath(input_pattern, checkIfExists: true)
+    .splitCsv(header: true)
+    .map { row ->
+      tuple([id: row.sample], file(row.fasta, checkIfExists: true))
+    }
+
+  FASTQC(samples)
+
+  fastqc_archives = FASTQC.out.zip
+    .map { meta, archive -> archive }
+    .collect()
+
+  multiqc_config = Channel.value(file("$projectDir/assets/multiqc_config.yml", checkIfExists: true))
+  MULTIQC(fastqc_archives, multiqc_config)
 
   emit:
-  FASTA_QC.out
+  fastqc = FASTQC.out.zip
+  multiqc = MULTIQC.out.report
 }
