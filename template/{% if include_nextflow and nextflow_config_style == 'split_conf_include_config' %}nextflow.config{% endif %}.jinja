@@ -50,7 +50,7 @@ profiles {
   test_full   { includeConfig 'conf/test_full.config' }
 }
 
-includeConfig !System.getenv('NXF_OFFLINE') && params.custom_config_base ?
+includeConfig System.getenv('NXF_OFFLINE') == null && params.custom_config_base ?
   "${params.custom_config_base}/nfcore_custom.config" : "/dev/null"
 
 apptainer.registry   = '{{ container_registry }}'
