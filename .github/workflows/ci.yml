@@ -52,7 +52,7 @@ jobs:
         run: |
           set -euo pipefail
           output_dir="$(mktemp -d)"
-          uv run copier copy . "$output_dir" --defaults --force --trust \
+          uv run copier copy . "$output_dir" --vcs-ref HEAD --defaults --force --trust \
             -d project_name="Integration Project" \
             -d project_description="Integration smoke test" \
             -d project_slug="integration_project" \
