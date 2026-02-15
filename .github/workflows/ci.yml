@@ -45,16 +45,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
 
-      - name: Set up Nextflow 25
-        uses: nf-core/setup-nextflow@v2
-        with:
-          version: "25.04"
-          java-version: "17"
-          java-distribution: "temurin"
-
-      - name: Verify Nextflow installation
-        run: nextflow -version
-
       - name: Install template dependencies
         run: make install
 
@@ -80,6 +70,16 @@ jobs:
             -d nextflow_default_profile="local" \
             -d nextflow_config_style="single_nextflow_config"
           echo "OUTPUT_DIR=$output_dir" >> "$GITHUB_ENV"
+
+      - name: Set up Nextflow 25
+        uses: nf-core/setup-nextflow@v2
+        with:
+          version: "25.04"
+          java-version: "17"
+          java-distribution: "temurin"
+
+      - name: Verify Nextflow installation
+        run: nextflow -version
 
       - name: Run Nextflow smoke test
         run: |
