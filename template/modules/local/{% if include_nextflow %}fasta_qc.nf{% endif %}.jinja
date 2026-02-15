@@ -1,0 +1,15 @@
+process FASTA_QC {
+  label 'low'
+
+  input:
+  path fasta
+
+  output:
+  path "${fasta.baseName}.qc.txt"
+
+  script:
+  """
+  echo "name=${fasta.baseName}" > ${fasta.baseName}.qc.txt
+  echo "bytes=$(wc -c < ${fasta})" >> ${fasta.baseName}.qc.txt
+  """
+}

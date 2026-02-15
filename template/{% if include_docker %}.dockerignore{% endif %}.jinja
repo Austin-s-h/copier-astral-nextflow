@@ -44,3 +44,16 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+{% if include_nextflow %}
+
+# Nextflow
+.nextflow*
+work/
+results/
+results-smoke/
+results-test/
+timeline.html
+report.html
+trace.txt
+dag.html
+{% endif %}

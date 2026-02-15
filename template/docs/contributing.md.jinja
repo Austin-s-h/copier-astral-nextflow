@@ -47,7 +47,17 @@ Thank you for your interest in contributing to {{ project_name }}!
    uv run ty check
    ```
 
-4. Commit your changes using [conventional commits](https://www.conventionalcommits.org/):
+{%- if include_nextflow %}
+
+4. Validate pipeline changes:
+
+   ```bash
+   nextflow config -profile {{ nextflow_default_profile }}
+   nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/test/*.fa" --outdir results-test
+   ```
+{%- endif %}
+
+5. Commit your changes using [conventional commits](https://www.conventionalcommits.org/):
 
    ```bash
    git commit -m "feat: add new feature"

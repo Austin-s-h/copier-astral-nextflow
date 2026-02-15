@@ -1,0 +1,10 @@
+manifest {
+  name = '{{ github_username }}/{{ repository_name }}'
+  description = '{{ project_description }}'
+  version = '0.1.0'
+  nextflowVersion = '!>=25.00.0'
+}
+
+includeConfig 'conf/base.config'
+includeConfig 'conf/profiles.config'
+includeConfig 'conf/test.config'

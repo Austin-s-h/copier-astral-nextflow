@@ -27,6 +27,17 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Stage 2: Runtime
 FROM python:{{ python_version }}-slim as runtime
 
+{%- if include_nextflow and container_strategy == 'full_pipeline_image' %}
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends bash curl openjdk-17-jre-headless && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://get.nextflow.io | bash && \
+    mv nextflow /usr/local/bin/nextflow && \
+    chmod +x /usr/local/bin/nextflow
+{%- endif %}
+
 # Create non-root user for security
 RUN groupadd --gid 1000 appgroup && \
     useradd --uid 1000 --gid appgroup --shell /bin/bash --create-home appuser
@@ -40,6 +51,17 @@ COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+{%- if include_nextflow %}
+ENV NXF_ANSI_LOG=false
+{%- endif %}
+
+{%- if include_nextflow and container_strategy == 'full_pipeline_image' %}
+
+COPY main.nf nextflow.config ./
+COPY modules/ modules/
+COPY subworkflows/ subworkflows/
+COPY data/ data/
+{%- endif %}
 
 # Switch to non-root user
 USER appuser
@@ -48,6 +70,11 @@ USER appuser
 # Default command
 ENTRYPOINT ["{{ project_slug }}"]
 CMD ["--help"]
+{%- elif include_nextflow and container_strategy == 'full_pipeline_image' %}
+
+# Default command
+ENTRYPOINT ["nextflow", "run", "main.nf"]
+CMD ["-profile", "{{ nextflow_default_profile }}"]
 {%- else %}
 
 # Default command

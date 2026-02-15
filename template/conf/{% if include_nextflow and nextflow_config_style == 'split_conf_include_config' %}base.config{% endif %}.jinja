@@ -1,0 +1,52 @@
+params {
+  input = 'data/*.fa'
+  outdir = 'results'
+}
+
+process {
+  cpus = 2
+  memory = '4 GB'
+  time = '2h'
+
+  withLabel: low {
+    cpus = 1
+    memory = '2 GB'
+    time = '1h'
+  }
+
+  withLabel: medium {
+    cpus = 4
+    memory = '8 GB'
+    time = '4h'
+  }
+
+  withLabel: high {
+    cpus = 8
+    memory = '16 GB'
+    time = '8h'
+  }
+
+  errorStrategy = 'retry'
+  maxRetries = 2
+  maxErrors = '-1'
+}
+
+timeline {
+  enabled = true
+  file = 'timeline.html'
+}
+
+report {
+  enabled = true
+  file = 'report.html'
+}
+
+trace {
+  enabled = true
+  file = 'trace.txt'
+}
+
+dag {
+  enabled = true
+  file = 'dag.html'
+}

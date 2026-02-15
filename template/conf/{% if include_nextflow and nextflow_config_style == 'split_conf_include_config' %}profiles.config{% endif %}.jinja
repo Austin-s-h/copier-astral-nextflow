@@ -1,0 +1,39 @@
+profiles {
+  local {
+    process.executor = 'local'
+  }
+
+  docker {
+    process.executor = 'local'
+    docker.enabled = true
+    apptainer.enabled = false
+    conda.enabled = false
+  }
+
+  conda {
+    conda.enabled = true
+    process.executor = 'local'
+  }
+
+  apptainer {
+    apptainer.enabled = true
+    process.executor = 'local'
+  }
+
+  // Extension note: add an AWS Batch profile when moving to cloud execution.
+  // awsbatch {
+  //   process.executor = 'awsbatch'
+  //   aws.region = 'us-east-1'
+  //   docker.enabled = true
+  //   // For private ECR images, use an ECR URI in process.container.
+  // }
+
+  smoke {
+    params.input = 'data/smoke/*.fa'
+    params.outdir = 'results-smoke'
+  }
+
+  debug {
+    process.echo = true
+  }
+}

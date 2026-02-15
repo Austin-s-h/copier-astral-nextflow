@@ -4,6 +4,9 @@
 {%- if include_pypi_publish %}
 [![PyPI version](https://badge.fury.io/py/{{ project_slug }}.svg)](https://badge.fury.io/py/{{ project_slug }})
 {%- endif %}
+{%- if include_ghcr_release %}
+[![GHCR](https://img.shields.io/badge/container-ghcr.io-blue)](https://ghcr.io/{{ github_username }}/{{ repository_name }})
+{%- endif %}
 {%- if include_codecov %}
 [![codecov](https://codecov.io/gh/{{ github_username }}/{{ repository_name }}/branch/main/graph/badge.svg)](https://codecov.io/gh/{{ github_username }}/{{ repository_name }})
 {%- endif %}
@@ -21,6 +24,9 @@
 - Type-safe with full type annotations
 {%- if include_cli %}
 - Command-line interface built with Typer
+{%- endif %}
+{%- if include_nextflow %}
+- Nextflow DSL2 pipeline scaffold with profile-based execution
 {%- endif %}
 {%- if include_docs %}
 - Comprehensive documentation with MkDocs — [View Docs](https://{{ github_username }}.github.io/{{ repository_name }}/)
@@ -55,7 +61,29 @@ print({{ project_slug }}.__version__)
 
 # Say hello
 {{ project_slug }} hello World
+
+{%- if include_nextflow %}
+# Run bundled Nextflow pipeline
+{{ project_slug }} run-nextflow --profile {{ nextflow_default_profile }}
+{%- endif %}
 ```
+{%- endif %}
+
+{%- if include_nextflow %}
+
+## Nextflow Usage
+
+```bash
+# Validate config
+nextflow config -profile {{ nextflow_default_profile }}
+
+# Fast smoke run
+nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/test/*.fa" --outdir results-test
+```
+
+- Generated config targets Nextflow 25 and includes `apptainer` profile support.
+- To extend for AWS Batch, add an `awsbatch` profile in `nextflow.config` and set `process.executor = 'awsbatch'`.
+- For AWS Batch mode with private images, point `process.container` to your account's private ECR URI.
 {%- endif %}
 
 ## Development
@@ -83,6 +111,11 @@ make test-cov
 
 # Across all Python versions
 make test-matrix
+{%- if include_nextflow %}
+
+# Nextflow smoke run
+make nextflow-smoke
+{%- endif %}
 ```
 
 ### Code Quality

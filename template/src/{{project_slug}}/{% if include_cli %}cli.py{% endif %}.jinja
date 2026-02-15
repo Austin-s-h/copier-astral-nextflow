@@ -1,5 +1,7 @@
 """Command-line interface for {{ project_slug }}."""
 
+import subprocess
+
 import typer
 
 from {{ project_slug }} import __version__
@@ -38,6 +40,20 @@ def hello(
 ) -> None:
     """Say hello to someone."""
     typer.echo(f"Hello, {name}!")
+
+
+{% if include_nextflow %}
+@app.command("run-nextflow")
+def run_nextflow(
+    profile: str = typer.Option("{{ nextflow_default_profile }}", help="Nextflow profile"),
+    resume: bool = typer.Option(True, "--resume/--no-resume", help="Resume cached run"),
+) -> None:
+    """Run the bundled Nextflow pipeline."""
+    command = ["nextflow", "run", "main.nf", "-profile", profile]
+    if resume:
+        command.append("-resume")
+    subprocess.run(command, check=True)
+{% endif %}
 
 
 if __name__ == "__main__":

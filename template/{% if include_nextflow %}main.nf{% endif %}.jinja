@@ -1,0 +1,8 @@
+nextflow.enable.dsl=2
+
+include { FASTA_QC } from './modules/local/fasta_qc'
+include { PIPELINE_MAIN } from './subworkflows/local/pipeline_main'
+
+workflow {
+    PIPELINE_MAIN(params.input)
+}

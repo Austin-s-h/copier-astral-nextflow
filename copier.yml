@@ -98,6 +98,19 @@ python_versions_matrix:
 # Features
 # =============================================================================
 
+project_type:
+  type: str
+  help: "Project archetype"
+  choices:
+    - python_package
+    - hybrid_python_nextflow
+  default: hybrid_python_nextflow
+
+include_nextflow:
+  type: bool
+  help: "Include a Nextflow DSL2 pipeline scaffold?"
+  default: "{{ project_type == 'hybrid_python_nextflow' }}"
+
 include_cli:
   type: bool
   help: "Include CLI with Typer?"
@@ -112,6 +125,41 @@ include_docker:
   type: bool
   help: "Include Dockerfile for containerization?"
   default: true
+
+container_strategy:
+  type: str
+  help: "Container strategy"
+  choices:
+    - python_runtime
+    - full_pipeline_image
+  default: "{{ 'full_pipeline_image' if include_nextflow else 'python_runtime' }}"
+  when: "{{ include_docker }}"
+
+nextflow_config_style:
+  type: str
+  help: "Nextflow config style"
+  choices:
+    - single_nextflow_config
+    - split_conf_include_config
+  default: single_nextflow_config
+  when: "{{ include_nextflow }}"
+
+nextflow_default_profile:
+  type: str
+  help: "Default Nextflow execution profile"
+  choices:
+    - local
+    - docker
+    - conda
+    - apptainer
+  default: local
+  when: "{{ include_nextflow }}"
+
+include_bio_defaults:
+  type: bool
+  help: "Include light bioinformatics defaults and placeholders?"
+  default: true
+  when: "{{ include_nextflow }}"
 
 include_docs:
   type: bool
@@ -140,6 +188,12 @@ include_pypi_publish:
   help: "Include automatic PyPI publishing?"
   default: true
   when: "{{ include_github_actions }}"
+
+include_ghcr_release:
+  type: bool
+  help: "Include GHCR image build/publish in release workflow?"
+  default: "{{ include_docker and include_nextflow }}"
+  when: "{{ include_github_actions and include_docker }}"
 
 # =============================================================================
 # License

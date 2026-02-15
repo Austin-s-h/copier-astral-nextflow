@@ -32,14 +32,28 @@ When you run `copier copy`, you'll be prompted for the following options.
 
 | Prompt | Type | Default | Description |
 |--------|------|---------|-------------|
+| `project_type` | choice | `hybrid_python_nextflow` | Project archetype (`python_package` or `hybrid_python_nextflow`) |
+| `include_nextflow` | bool | `true` for hybrid archetype | Include Nextflow DSL2 scaffold |
 | `include_cli` | bool | `true` | Include CLI with Typer |
 | `include_github_actions` | bool | `true` | Include GitHub Actions CI/CD |
 | `include_docker` | bool | `true` | Include Dockerfile for containerization |
+| `container_strategy` | choice | `full_pipeline_image` when Nextflow enabled | Container mode (`python_runtime` or `full_pipeline_image`) |
+| `nextflow_config_style` | choice | `single_nextflow_config` | Nextflow config layout (`single_nextflow_config` or `split_conf_include_config`) |
+| `nextflow_default_profile` | choice | `local` | Default Nextflow runtime profile (`local`, `docker`, `conda`, or `apptainer`) |
+| `include_bio_defaults` | bool | `true` | Include light bioinformatics defaults/placeholders |
 | `include_docs` | bool | `true` | Include MkDocs documentation |
 | `include_prek` | bool | `true` | Include prek hooks |
 | `include_codecov` | bool | `true` | Include Codecov integration (requires GitHub Actions) |
 | `include_security_scanning` | bool | `true` | Include security scanning with Gitleaks, pysentry, and Semgrep (requires GitHub Actions) |
 | `include_pypi_publish` | bool | `true` | Include automatic PyPI publishing (requires GitHub Actions) |
+| `include_ghcr_release` | bool | `true` when Docker + Nextflow | Include GHCR container publish in release workflow |
+
+### Nextflow Cloud Extension Notes
+
+- Generated Nextflow configs target Nextflow 25 by default.
+- `apptainer` is used instead of `singularity` in generated profiles.
+- Config templates include a commented `awsbatch` profile stub to extend for AWS Batch execution.
+- For AWS Batch mode, update `process.container` to a private ECR URI and extend release automation to publish to that ECR repository.
 
 ### License
 

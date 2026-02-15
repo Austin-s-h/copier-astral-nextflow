@@ -23,13 +23,20 @@ def default_answers() -> dict:
         "repository_name": "test-project",
         "python_version": "3.12",
         "python_versions_matrix": "3.10,3.11,3.12,3.13",
+        "project_type": "hybrid_python_nextflow",
+        "include_nextflow": True,
         "include_cli": True,
         "include_github_actions": True,
         "include_docker": True,
+        "container_strategy": "full_pipeline_image",
+        "nextflow_config_style": "single_nextflow_config",
+        "nextflow_default_profile": "local",
+        "include_bio_defaults": True,
         "include_docs": True,
         "include_prek": True,
         "include_codecov": True,
         "include_pypi_publish": True,
+        "include_ghcr_release": True,
         "license": "MIT",
     }
 
@@ -45,7 +52,7 @@ def run_copier(tmp_path: Path, answers: dict) -> Path:
         Path to the generated project.
     """
     output_dir = tmp_path / "output"
-    output_dir.mkdir()
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # Build copier command with data flags
     cmd = [
@@ -56,7 +63,6 @@ def run_copier(tmp_path: Path, answers: dict) -> Path:
         "--defaults",
         "--force",
         "--trust",
-        "--vcs-ref=main",
     ]
 
     for key, value in answers.items():
@@ -207,6 +213,44 @@ class TestOptionalFeatures:
         pyproject = project / "pyproject.toml"
         assert file_contains_text(pyproject, "[project.scripts]")
         assert file_contains_text(pyproject, "typer")
+
+    def test_nextflow_included(self, tmp_path: Path, default_answers: dict):
+        """Test Nextflow files are included when enabled."""
+        project = run_copier(tmp_path, default_answers)
+
+        assert file_exists(project, "main.nf")
+        assert file_exists(project, "nextflow.config")
+        assert file_exists(project, "modules/local/fasta_qc.nf")
+        assert file_exists(project, "subworkflows/local/pipeline_main.nf")
+
+    def test_nextflow_excluded(self, tmp_path: Path, default_answers: dict):
+        """Test Nextflow files are excluded when disabled."""
+        answers = {**default_answers, "project_type": "python_package", "include_nextflow": False}
+        project = run_copier(tmp_path, answers)
+
+        assert not file_exists(project, "main.nf")
+        assert not file_exists(project, "nextflow.config")
+
+    def test_split_nextflow_config_layout(self, tmp_path: Path, default_answers: dict):
+        """Test split Nextflow config files are generated when selected."""
+        answers = {**default_answers, "nextflow_config_style": "split_conf_include_config"}
+        project = run_copier(tmp_path, answers)
+
+        assert file_exists(project, "nextflow.config")
+        assert file_exists(project, "conf/base.config")
+        assert file_exists(project, "conf/profiles.config")
+        assert file_exists(project, "conf/test.config")
+
+    def test_ghcr_release_toggle(self, tmp_path: Path, default_answers: dict):
+        """Test GHCR release workflow behavior follows toggle."""
+        project = run_copier(tmp_path, default_answers)
+        release = project / ".github" / "workflows" / "release.yml"
+        assert file_contains_text(release, "publish-ghcr")
+
+        answers = {**default_answers, "include_ghcr_release": False}
+        project_without = run_copier(tmp_path / "without-ghcr", answers)
+        release_without = project_without / ".github" / "workflows" / "release.yml"
+        assert not file_contains_text(release_without, "publish-ghcr")
 
 
 class TestLicenses:

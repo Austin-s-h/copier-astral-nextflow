@@ -1,0 +1,13 @@
+name: nextflow-runtime
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python={{ python_version }}
+  - nextflow
+  - openjdk=17
+  - pip
+{% if include_bio_defaults %}
+  - seqkit
+  - samtools
+{% endif %}
