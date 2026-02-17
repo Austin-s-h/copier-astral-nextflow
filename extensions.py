@@ -63,6 +63,10 @@ def github_username(_: str = "") -> str:
     Returns:
         The GitHub username or empty string if not found.
     """
+    def _is_valid(value: str) -> bool:
+        # Keep this in sync with copier.yml's validator.
+        return bool(re.fullmatch(r"[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?", value))
+
     # Try gh CLI first
     try:
         result = subprocess.run(
@@ -71,8 +75,9 @@ def github_username(_: str = "") -> str:
             text=True,
             timeout=10,
         )
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
+        candidate = result.stdout.strip() if result.returncode == 0 else ""
+        if candidate and _is_valid(candidate):
+            return candidate
     except (subprocess.SubprocessError, FileNotFoundError):
         pass
 
@@ -84,8 +89,9 @@ def github_username(_: str = "") -> str:
             text=True,
             timeout=5,
         )
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip()
+        candidate = result.stdout.strip() if result.returncode == 0 else ""
+        if candidate and _is_valid(candidate):
+            return candidate
     except (subprocess.SubprocessError, FileNotFoundError):
         pass
 
