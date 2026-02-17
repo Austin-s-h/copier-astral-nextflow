@@ -228,8 +228,20 @@ class TestOptionalFeatures:
 
         assert file_exists(project, "main.nf")
         assert file_exists(project, "nextflow.config")
+        assert file_exists(project, "nextflow_schema.json")
+        assert file_exists(project, ".env")
+        assert file_exists(project, "tower.yml")
+        assert file_exists(project, ".vscode/settings.json")
+        assert file_exists(project, ".vscode/extensions.json")
+        assert file_exists(project, ".devcontainer/devcontainer.json")
+        assert file_exists(project, "conf/base.config")
+        assert file_exists(project, "conf/modules.config")
+        assert file_exists(project, "conf/test.config")
+        assert file_exists(project, "conf/test_full.config")
         assert file_exists(project, "modules/local/fasta_qc.nf")
         assert file_exists(project, "subworkflows/local/pipeline_main.nf")
+        assert file_exists(project, "workflows/test_project/main.nf")
+        assert file_exists(project, "workflows/test_project/nextflow.config")
 
     def test_nextflow_excluded(self, tmp_path: Path, default_answers: dict):
         """Test Nextflow files are excluded when disabled."""
@@ -242,7 +254,7 @@ class TestOptionalFeatures:
     def test_nextflow_validate_includes_lint(self, tmp_path: Path, default_answers: dict):
         """Test Makefile nextflow-validate target includes lint."""
         project = run_copier(tmp_path, default_answers)
-        assert file_contains_text(project / "Makefile", "nextflow lint main.nf -profile local")
+        assert file_contains_text(project / "Makefile", "NXF_SYNTAX_PARSER=v2 nextflow lint .")
 
     def test_split_nextflow_config_layout(self, tmp_path: Path, default_answers: dict):
         """Test split Nextflow config files are generated when selected."""
@@ -265,18 +277,15 @@ class TestOptionalFeatures:
         release_without = project_without / ".github" / "workflows" / "release.yml"
         assert not file_contains_text(release_without, "publish-ghcr")
 
-    def test_awsbatch_profile_generated(self, tmp_path: Path, default_answers: dict):
-        """Test AWS Batch profile is generated when enabled."""
+    def test_container_registry_is_used(self, tmp_path: Path, default_answers: dict):
+        """Test container registry answer is reflected in Nextflow config."""
         answers = {
             **default_answers,
-            "include_aws_batch": True,
-            "nextflow_default_profile": "awsbatch",
+            "container_registry": "ghcr.io",
         }
         project = run_copier(tmp_path, answers)
         nextflow_config = project / "nextflow.config"
-        assert file_contains_text(nextflow_config, "awsbatch {")
-        assert file_contains_text(nextflow_config, "process.executor = 'awsbatch'")
-        assert file_contains_text(nextflow_config, "process.container = params.ecr_container")
+        assert file_contains_text(nextflow_config, "docker.registry      = 'ghcr.io'")
 
     def test_ecr_release_toggle(self, tmp_path: Path, default_answers: dict):
         """Test ECR release workflow behavior follows toggle."""

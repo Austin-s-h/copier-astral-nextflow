@@ -1,0 +1,23 @@
+name: Linting
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    env:
+      NXF_SYNTAX_PARSER: v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nf-core/setup-nextflow@v2
+        with:
+          version: '{{ min_nextflow_version }}'
+          java-version: '17'
+          java-distribution: 'temurin'
+      - name: Preflight Nextflow config
+        run: nextflow config -profile {{ nextflow_default_profile }}
+      - name: Lint Nextflow
+        run: nextflow lint .

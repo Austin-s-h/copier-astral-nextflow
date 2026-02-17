@@ -44,6 +44,7 @@ dependencies = [
 dev = [
     "pytest>=9.0.0",
     "pytest-cov>=7.0.0",
+    "pytest-xdist>=3.8.0",
     "codespell>=2.4.0",
     "ruff>=0.14.14",
     "ty>=0.0.14",
@@ -103,7 +104,7 @@ python = [{% for v in python_versions_matrix.split(',') %}"{{ v.strip() }}"{% if
 
 [tool.ruff]
 target-version = "py{{ python_version | replace('.', '') }}"
-line-length = 88
+line-length = 120
 src = ["src", "tests"]
 
 [tool.ruff.lint]
@@ -147,9 +148,13 @@ all = "error"
 # dependencies and native bindings may not be import-resolvable in all envs.
 unresolved-import = "ignore"
 possibly-missing-import = "ignore"
+redundant-cast = "warn"
 
 # Keep ignore comments tidy without failing builds.
 unused-ignore-comment = "warn"
+
+[tool.ty.analysis]
+allowed-unresolved-imports = ["**"]
 
 # =============================================================================
 # Pytest
@@ -160,11 +165,20 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = [
     "-ra",
+    "-n",
+    "auto",
     "-q",
     "--strict-markers",
     "--strict-config",
+    "--color=yes",
 ]
+log_cli = true
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_level = "INFO"
 markers = [
+    "unit: marks tests as unit tests",
+    "ci: marks tests as continuous integration tests",
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
 
@@ -197,6 +211,7 @@ exclude_lines = [
     "@abstractmethod",
 ]
 show_missing = true
+skip_covered = false
 
 # =============================================================================
 # git-cliff (Changelog generation)

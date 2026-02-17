@@ -204,6 +204,72 @@ include_bio_defaults:
   default: true
   when: "{{ include_nextflow }}"
 
+pipeline_name:
+  type: str
+  help: "Pipeline name (e.g., myorg/mypipeline)"
+  default: "{{ github_username }}/{{ repository_name }}"
+  when: "{{ include_nextflow }}"
+
+pipeline_slug:
+  type: str
+  default: "{{ repository_name | replace('-', '_') }}"
+  when: "{{ include_nextflow }}"
+
+description:
+  type: str
+  default: "{{ project_description }}"
+  when: "{{ include_nextflow }}"
+
+author:
+  type: str
+  default: "{{ author_name }}"
+  when: "{{ include_nextflow }}"
+
+org:
+  type: str
+  help: "GitHub organization"
+  default: "{{ github_username }}"
+  when: "{{ include_nextflow }}"
+
+version:
+  type: str
+  default: "1.0.0dev"
+  when: "{{ include_nextflow }}"
+
+repo_url:
+  type: str
+  default: "https://github.com/{{ github_username }}/{{ repository_name }}"
+  when: "{{ include_nextflow }}"
+
+min_nextflow_version:
+  type: str
+  default: "25.04.0"
+  when: "{{ include_nextflow }}"
+
+use_seqera_platform:
+  type: bool
+  default: true
+  when: "{{ include_nextflow }}"
+
+use_nfcore_modules:
+  type: bool
+  default: true
+  when: "{{ include_nextflow }}"
+
+use_wave:
+  type: bool
+  default: false
+  when: "{{ include_nextflow }}"
+
+container_registry:
+  type: str
+  default: "quay.io"
+  choices:
+    - quay.io
+    - docker.io
+    - ghcr.io
+  when: "{{ include_nextflow }}"
+
 include_docs:
   type: bool
   help: "Include MkDocs documentation?"
@@ -263,4 +329,3 @@ license:
 # =============================================================================
 # Computed/Internal Variables
 # =============================================================================
-

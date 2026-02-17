@@ -52,8 +52,9 @@ Thank you for your interest in contributing to {{ project_name }}!
 4. Validate pipeline changes:
 
    ```bash
+   make nextflow-prereqs
    nextflow config -profile {{ nextflow_default_profile }}
-   nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/test/*.fa" --outdir results-test
+   nextflow run main.nf -profile test,{{ nextflow_default_profile }} --input "data/test/samplesheet.csv" --outdir results-test
    ```
 {%- endif %}
 
